@@ -18,6 +18,11 @@ use vergen::{ConstantsFlags, generate_cargo_keys};
 
 const ERROR_MSG: &str = "Failed to generate metadata files";
 
+/*
+基于 1.0beta2 版本
+
+*/
+
 fn main() {
 	generate_cargo_keys(ConstantsFlags::all()).expect(ERROR_MSG);
 	println!("cargo:rerun-if-changed=.git/HEAD");

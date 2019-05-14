@@ -233,10 +233,16 @@ impl<T: Trait> OnTimestampSet<T::Moment> for Module<T> {
 }
 
 /// A type for performing slashing based on Aura reports.
+/*
+TODO Slashing (惩罚)相关
+一种基于Aura报告执行削减的类型
+*/
 pub struct StakingSlasher<T>(::rstd::marker::PhantomData<T>);
 
 impl<T: staking::Trait + Trait> HandleReport for StakingSlasher<T> {
 	fn handle_report(report: AuraReport) {
+
+		// 从 session中 获取当前 验证人集 的长度
 		let validators = session::Module::<T>::validators();
 
 		report.punish(

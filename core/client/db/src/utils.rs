@@ -21,6 +21,15 @@ use std::sync::Arc;
 use std::io;
 
 use kvdb::{KeyValueDB, DBTransaction};
+/*
+TODO 注意了 polkadot 使用 RocksDB的
+
+其实 最终调到了
+https://github.com/paritytech/rust-rocksdb
+这个是 polkadot 自己 fork
+https://github.com/rust-rocksdb/rust-rocksdb
+并自己做的封装
+*/
 use kvdb_rocksdb::{Database, DatabaseConfig};
 use log::debug;
 
@@ -191,6 +200,11 @@ pub fn db_err(err: io::Error) -> client::error::Error {
 }
 
 /// Open RocksDB database.
+/*
+TODO  开启一个真正的DB 实例 (RocksDB)
+打开一个 RocksDB  实例
+
+*/
 pub fn open_database(config: &DatabaseSettings, col_meta: Option<u32>, db_type: &str) -> client::error::Result<Arc<KeyValueDB>> {
 	let mut db_config = DatabaseConfig::with_columns(Some(NUM_COLUMNS));
 	db_config.memory_budget = config.cache_size;

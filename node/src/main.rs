@@ -43,9 +43,14 @@ impl cli::IntoExit for Exit {
 	}
 }
 
+/*
+TODO substrate 的真正入口
+*/
 error_chain::quick_main!(run);
 
 fn run() -> cli::error::Result<()> {
+
+	// Substrate Node 的一些版本信息
 	let version = VersionInfo {
 		name: "Substrate Node",
 		commit: env!("VERGEN_SHA_SHORT"),
@@ -55,5 +60,6 @@ fn run() -> cli::error::Result<()> {
 		description: "Generic substrate node",
 		support_url: "https://github.com/paritytech/substrate/issues/new",
 	};
+	// 启动节点
 	cli::run(::std::env::args(), Exit, version)
 }

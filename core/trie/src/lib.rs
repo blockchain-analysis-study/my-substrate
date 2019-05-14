@@ -16,6 +16,10 @@
 
 //! Utility functions to interact with Substrate's Base-16 Modified Merkle Patricia tree ("trie").
 
+/*
+这里，定义了各种树结构的类型
+*/
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 mod error;
@@ -26,6 +30,11 @@ mod trie_stream;
 use rstd::boxed::Box;
 use rstd::vec::Vec;
 use hash_db::Hasher;
+
+
+/*
+将下述 模块 重新导出
+*/
 /// Our `NodeCodec`-specific error.
 pub use error::Error;
 /// The Substrate format implementation of `TrieStream`.

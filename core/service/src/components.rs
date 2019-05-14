@@ -422,6 +422,10 @@ pub trait Components: Sized + 'static {
 }
 
 /// A struct that implement `Components` for the full client.
+/*
+TODO 重要入口
+定义 fullnode
+*/
 pub struct FullComponents<Factory: ServiceFactory> {
 	service: Service<FullComponents<Factory>>,
 }
@@ -454,6 +458,7 @@ impl<Factory: ServiceFactory> DerefMut for FullComponents<Factory> {
 	}
 }
 
+
 impl<Factory: ServiceFactory> Components for FullComponents<Factory> {
 	type Factory = Factory;
 	type Executor = FullExecutor<Factory>;
@@ -479,6 +484,11 @@ impl<Factory: ServiceFactory> Components for FullComponents<Factory> {
 			path: config.database_path.as_str().into(),
 			pruning: config.pruning.clone(),
 		};
+
+		/*
+		TODO 重要 入口
+		创建一个 db-backed客户端的实例
+		*/
 		Ok((Arc::new(client_db::new_client(
 			db_settings,
 			executor,
@@ -512,6 +522,10 @@ impl<Factory: ServiceFactory> Components for FullComponents<Factory> {
 }
 
 /// A struct that implement `Components` for the light client.
+/*
+TODO 重要入口
+定义 lightNode
+*/
 pub struct LightComponents<Factory: ServiceFactory> {
 	service: Service<LightComponents<Factory>>,
 }

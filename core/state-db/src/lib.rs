@@ -43,6 +43,9 @@ use pruning::RefWindow;
 use log::trace;
 
 /// Database value type.
+/*
+数据库的类型
+*/
 pub type DBValue = Vec<u8>;
 
 /// Basic set of requirements for the Block hash and node key types.
@@ -50,19 +53,35 @@ pub trait Hash: Send + Sync + Sized + Eq + PartialEq + Clone + Default + fmt::De
 impl<T: Send + Sync + Sized + Eq + PartialEq + Clone + Default + fmt::Debug + Codec + std::hash::Hash + 'static> Hash for T {}
 
 /// Backend database trait. Read-only.
+/*
+【只读】
+
+后端DB 特质  （元数据）
+*/
 pub trait MetaDb {
 	type Error: fmt::Debug;
 
 	/// Get meta value, such as the journal.
+	/*
+	获取 元数据的 value
+	*/
 	fn get_meta(&self, key: &[u8]) -> Result<Option<DBValue>, Self::Error>;
 }
 
 /// Backend database trait. Read-only.
+/*
+【只读】
+
+后端DB 特质 （节点数据）
+*/
 pub trait NodeDb {
 	type Key: ?Sized;
 	type Error: fmt::Debug;
 
 	/// Get state trie node.
+	/*
+	获取 node上的  state
+	*/
 	fn get(&self, key: &Self::Key) -> Result<Option<DBValue>, Self::Error>;
 }
 
@@ -162,14 +181,22 @@ fn to_meta_key<S: Codec>(suffix: &[u8], data: &S) -> Vec<u8> {
 	buffer
 }
 
+
+/*
+statedb 的同步读写结构
+*/
 struct StateDbSync<BlockHash: Hash, Key: Hash> {
 	mode: PruningMode,
 	non_canonical: NonCanonicalOverlay<BlockHash, Key>,
 	pruning: Option<RefWindow<BlockHash, Key>>,
 	pinned: HashSet<BlockHash>,
 }
-
+// StateDbSync 的方法实现
 impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
+
+	/*
+	创建一个 stateDBSync实例
+	*/
 	pub fn new<D: MetaDb>(mode: PruningMode, db: &D) -> Result<StateDbSync<BlockHash, Key>, Error<D::Error>> {
 		trace!("StateDb settings: {:?}", mode);
 		let non_canonical: NonCanonicalOverlay<BlockHash, Key> = NonCanonicalOverlay::new(db)?;
@@ -189,6 +216,10 @@ impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
 		})
 	}
 
+
+	/*
+	插入 一个 block
+	*/
 	pub fn insert_block<E: fmt::Debug>(&mut self, hash: &BlockHash, number: u64, parent_hash: &BlockHash, mut changeset: ChangeSet<Key>) -> Result<CommitSet<Key>, Error<E>> {
 		match self.mode {
 			PruningMode::ArchiveAll => {
@@ -205,6 +236,10 @@ impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
 		}
 	}
 
+
+	/*
+	规范化 一个 block
+	*/
 	pub fn canonicalize_block<E: fmt::Debug>(&mut self, hash: &BlockHash) -> Result<CommitSet<Key>, Error<E>> {
 		let mut commit = match self.mode {
 			PruningMode::ArchiveAll => {
@@ -226,6 +261,10 @@ impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
 		Ok(commit)
 	}
 
+
+	/*
+	返回一个 规范 ??
+	*/
 	pub fn best_canonical(&self) -> Option<u64> {
 		return self.non_canonical.last_canonicalized_block_number()
 	}
@@ -243,6 +282,9 @@ impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
 		}
 	}
 
+	/*
+	修剪
+	*/
 	fn prune(&mut self, commit: &mut CommitSet<Key>) {
 		if let (&mut Some(ref mut pruning), &PruningMode::Constrained(ref constraints)) = (&mut self.pruning, &self.mode) {
 			loop {
@@ -266,6 +308,11 @@ impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
 	/// Revert all non-canonical blocks with the best block number.
 	/// Returns a database commit or `None` if not possible.
 	/// For archive an empty commit set is returned.
+	/*
+	使用最佳块编号恢复所有非规范块。
+	如果不可能，返回数据库提交或“无”。
+	对于存档，返回空提交集。
+	*/
 	pub fn revert_one(&mut self) -> Option<CommitSet<Key>> {
 		match self.mode {
 			PruningMode::ArchiveAll => {
@@ -318,12 +365,21 @@ impl<BlockHash: Hash, Key: Hash> StateDbSync<BlockHash, Key> {
 
 /// State DB maintenance. See module description.
 /// Can be shared across threads.
+/*
+TODO stateDB 的 操作方法集
+状态数据库 维护。 请参阅模块说明。
+可以跨线程共享。
+*/
 pub struct StateDb<BlockHash: Hash, Key: Hash> {
 	db: RwLock<StateDbSync<BlockHash, Key>>,
 }
 
 impl<BlockHash: Hash, Key: Hash> StateDb<BlockHash, Key> {
 	/// Creates a new instance. Does not expect any metadata in the database.
+	/*
+	TODO  创建 stateDB 实例
+	创建一个新实例。 不期望数据库中有任何元数据
+	*/
 	pub fn new<D: MetaDb>(mode: PruningMode, db: &D) -> Result<StateDb<BlockHash, Key>, Error<D::Error>> {
 		Ok(StateDb {
 			db: RwLock::new(StateDbSync::new(mode, db)?)
@@ -331,26 +387,41 @@ impl<BlockHash: Hash, Key: Hash> StateDb<BlockHash, Key> {
 	}
 
 	/// Add a new non-canonical block.
+	/*
+	添加一个新的非规范块
+	*/
 	pub fn insert_block<E: fmt::Debug>(&self, hash: &BlockHash, number: u64, parent_hash: &BlockHash, changeset: ChangeSet<Key>) -> Result<CommitSet<Key>, Error<E>> {
 		self.db.write().insert_block(hash, number, parent_hash, changeset)
 	}
 
 	/// Finalize a previously inserted block.
+	/*
+	完成先前插入的块
+	*/
 	pub fn canonicalize_block<E: fmt::Debug>(&self, hash: &BlockHash) -> Result<CommitSet<Key>, Error<E>> {
 		self.db.write().canonicalize_block(hash)
 	}
 
 	/// Prevents pruning of specified block and its descendants.
+	/*
+	防止修剪指定的块及其后代
+	*/
 	pub fn pin(&self, hash: &BlockHash) {
 		self.db.write().pin(hash)
 	}
 
 	/// Allows pruning of specified block.
+	/*
+	允许修剪指定的块
+	*/
 	pub fn unpin(&self, hash: &BlockHash) {
 		self.db.write().unpin(hash)
 	}
 
 	/// Get a value from non-canonical/pruning overlay or the backing DB.
+	/*
+	从非规范/修剪叠加层或后备DB获取值
+	*/
 	pub fn get<D: NodeDb>(&self, key: &Key, db: &D) -> Result<Option<DBValue>, Error<D::Error>>
 		where Key: AsRef<D::Key>
 	{
@@ -385,6 +456,9 @@ impl<BlockHash: Hash, Key: Hash> StateDb<BlockHash, Key> {
 	}
 }
 
+/*
+测试
+*/
 #[cfg(test)]
 mod tests {
 	use std::io;
@@ -394,6 +468,10 @@ mod tests {
 
 	fn make_test_db(settings: PruningMode) -> (TestDb, StateDb<H256, H256>) {
 		let mut db = make_db(&[91, 921, 922, 93, 94]);
+
+		/*
+		创建一个 stateDB 实例
+		*/
 		let state_db = StateDb::new(settings, &db).unwrap();
 
 		db.commit(

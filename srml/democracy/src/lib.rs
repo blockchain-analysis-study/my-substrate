@@ -120,6 +120,10 @@ decl_module! {
 
 		/// Vote in a referendum. If `vote.is_aye()`, the vote is to enact the proposal;
 		/// otherwise it is a vote to keep the status quo.
+		/*
+		在公民投票中投票。 如果是`vote.is_aye（）`，投票就是制定提案;
+		否则就是保持现状的投票
+		*/
 		fn vote(origin, #[compact] ref_index: ReferendumIndex, vote: Vote) -> Result {
 			let who = ensure_signed(origin)?;
 			Self::do_vote(who, ref_index, vote)
@@ -180,6 +184,9 @@ decl_module! {
 		}
 
 		/// Delegate vote.
+		/*
+		TODO 委托投票
+		*/
 		pub fn delegate(origin, to: T::AccountId, lock_periods: LockPeriods) {
 			let who = ensure_signed(origin)?;
 			<Delegations<T>>::insert(who.clone(), (to.clone(), lock_periods.clone()));
@@ -189,6 +196,9 @@ decl_module! {
 		}
 
 		/// Undelegate vote.
+		/*
+		TODO 解除委托投票
+		*/
 		fn undelegate(origin) {
 			let who = ensure_signed(origin)?;
 			ensure!(<Delegations<T>>::exists(&who), "not delegated");

@@ -114,7 +114,10 @@
 //! - [Timestamp](../srml_timestamp/index.html)
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
+/*
+TODO 这个超级重要，就是  staking 相关的东西
+Polkadot的staking 相关，都用 session来管理
+*/
 use rstd::prelude::*;
 use primitives::traits::{As, Zero, One, Convert};
 use srml_support::{StorageValue, StorageMap, for_each_tuple, decl_module, decl_event, decl_storage};
@@ -123,11 +126,18 @@ use system::ensure_signed;
 use rstd::ops::Mul;
 
 /// A session has changed.
+/*
+会话已更改 特质
+*/
 pub trait OnSessionChange<T> {
 	/// Session has changed.
 	fn on_session_change(time_elapsed: T, should_reward: bool);
 }
 
+/*
+定于 宏
+实现 session改变的宏
+*/
 macro_rules! impl_session_change {
 	() => (
 		impl<T> OnSessionChange<T> for () {
@@ -195,9 +205,16 @@ decl_event!(
 	}
 );
 
+
+/*
+关于当前 session的管理
+*/
 decl_storage! {
 	trait Store for Module<T: Trait> as Session {
 		/// The current set of validators.
+		/*
+		获取当前验证人 集
+		*/
 		pub Validators get(validators) config(): Vec<T::AccountId>;
 		/// Current length of the session.
 		pub SessionLength get(length) config(session_length): T::BlockNumber = T::BlockNumber::sa(1000);
@@ -226,6 +243,9 @@ decl_storage! {
 
 impl<T: Trait> Module<T> {
 	/// The current number of validators.
+	/*
+	获取当前 验证人集的 数量
+	*/
 	pub fn validator_count() -> u32 {
 		<Validators<T>>::get().len() as u32
 	}
@@ -246,6 +266,9 @@ impl<T: Trait> Module<T> {
 	///
 	/// Called by `staking::new_era` only. `rotate_session` must be called after this in order to
 	/// update the session keys to the next validator set.
+	/*
+	设置当前验证人集
+	*/
 	pub fn set_validators(new: &[T::AccountId]) {
 		<Validators<T>>::put(&new.to_vec());
 	}

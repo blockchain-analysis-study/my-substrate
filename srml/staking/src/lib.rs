@@ -232,7 +232,15 @@
 //! - [Balances](../srml_balances/index.html): Used to manage values at stake.
 //! - [Session](../srml_session/index.html): Used to manage sessions. Also, a list of new validators is
 //! stored in the Session module's `Validators` at the end of each era.
+/*
+###########################
+###########################
 
+TODO 真正 staking 相关的，作为 Polkadot 的依赖，被 Polkadot 引入使用
+
+###########################
+###########################
+*/
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
@@ -1040,6 +1048,11 @@ impl<T: Trait> Module<T> {
 	/// number of offenses the validator has committed.
 	///
 	/// NOTE: This is called with the controller (not the stash) account id.
+	/*
+	确定验证人处于脱机状态时调用。 `count`是验证人提交的攻击次数
+
+	注意：使用控制器（而不是存储）帐户ID调用此方法
+	*/
 	pub fn on_offline_validator(controller: T::AccountId, count: usize) {
 		if let Some(l) = Self::ledger(&controller) {
 			let stash = l.stash;

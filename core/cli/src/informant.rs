@@ -32,18 +32,28 @@ use runtime_primitives::generic::BlockId;
 use runtime_primitives::traits::{Header, As};
 
 /// Spawn informant on the event loop
+///
+/// 在事件循环上产生线人 ??
+/* 启动 Substrate 节点 */
 pub fn start<C>(service: &Service<C>, exit: ::exit_future::Exit, handle: TaskExecutor) where
 	C: Components,
 {
+
+	// 网络
 	let network = service.network();
+	// 客户端 client
 	let client = service.client();
+	// 交易池
 	let txpool = service.transaction_pool();
 	let mut last_number = None;
 	let mut last_update = time::Instant::now();
 
 	let mut sys = System::new();
+
+	// 当前 peerId
 	let self_pid = get_current_pid();
 
+	// 遍历  当前所有的网络状态
 	let display_notifications = network.status().for_each(move |sync_status| {
 
 		if let Ok(info) = client.info() {
@@ -88,6 +98,9 @@ pub fn start<C>(service: &Service<C>, exit: ::exit_future::Exit, handle: TaskExe
 				(proc.cpu_usage(), proc.memory())
 			} else { (0.0, 0) };
 
+			/*
+			获取 节点的网络状态
+			*/
 			let network_state = network.network_state();
 
 			telemetry!(
@@ -114,6 +127,9 @@ pub fn start<C>(service: &Service<C>, exit: ::exit_future::Exit, handle: TaskExe
 		Ok(())
 	});
 
+	/*
+	获取 client
+	*/
 	let client = service.client();
 	let mut last = match client.info() {
 		Ok(info) => Some((info.chain.best_number, info.chain.best_hash)),
@@ -125,6 +141,7 @@ pub fn start<C>(service: &Service<C>, exit: ::exit_future::Exit, handle: TaskExe
 		if let Some((ref last_num, ref last_hash)) = last {
 			if n.header.parent_hash() != last_hash {
 				let tree_route = ::client::blockchain::tree_route(
+					// 获取 blockchain
 					client.backend().blockchain(),
 					BlockId::Hash(last_hash.clone()),
 					BlockId::Hash(n.hash),
@@ -149,6 +166,9 @@ pub fn start<C>(service: &Service<C>, exit: ::exit_future::Exit, handle: TaskExe
 		Ok(())
 	});
 
+	/*
+	获取 交易池
+	*/
 	let txpool = service.transaction_pool();
 	let display_txpool_import = txpool.import_notification_stream().for_each(move |_| {
 		let status = txpool.status();

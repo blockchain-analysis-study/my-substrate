@@ -40,6 +40,8 @@ use client::blockchain::HeaderBackend;
 use client::ExecutionStrategies;
 use parity_codec::{Decode, Encode};
 use hash_db::Hasher;
+
+// kv DB
 use kvdb::{KeyValueDB, DBTransaction};
 use trie::{MemoryDB, PrefixedMemoryDB, prefixed_key};
 use parking_lot::{Mutex, RwLock};
@@ -82,6 +84,10 @@ pub struct DatabaseSettings {
 }
 
 /// Create an instance of db-backed client.
+/*
+TODO 很重重要
+创建db-backed客户端的实例
+*/
 pub fn new_client<E, S, Block, RA>(
 	settings: DatabaseSettings,
 	executor: E,
@@ -93,7 +99,16 @@ pub fn new_client<E, S, Block, RA>(
 		E: CodeExecutor<Blake2Hasher> + RuntimeInfo,
 		S: BuildStorage,
 {
+	/*
+	TODO
+	实例化一个 Backend 实例
+	在这里有 实例化 RocksDB 的操作哦
+	*/
 	let backend = Arc::new(Backend::new(settings, CANONICALIZATION_DELAY)?);
+
+	/*
+	实例化一个 执行器
+	*/
 	let executor = client::LocalCallExecutor::new(backend.clone(), executor);
 	Ok(client::Client::new(backend, executor, genesis_storage, execution_strategies)?)
 }
@@ -378,11 +393,17 @@ where Block: BlockT<Hash=H256>,
 	}
 }
 
+/*
+这个只是个 初级定义，类似与 抽象类
+*/
 struct StorageDb<Block: BlockT> {
 	pub db: Arc<KeyValueDB>,
 	pub state_db: StateDb<Block::Hash, Vec<u8>>,
 }
 
+/*
+StorageDb 的两个实现之一
+*/
 impl<Block: BlockT> state_machine::Storage<Blake2Hasher> for StorageDb<Block> {
 	fn get(&self, key: &H256, prefix: &[u8]) -> Result<Option<DBValue>, String> {
 		let key = prefixed_key::<Blake2Hasher>(key, prefix);
@@ -391,6 +412,10 @@ impl<Block: BlockT> state_machine::Storage<Blake2Hasher> for StorageDb<Block> {
 	}
 }
 
+/*
+TODO 重要
+实现 NodeDB 特质的  StorageDb
+*/
 impl<Block: BlockT> state_db::NodeDb for StorageDb<Block> {
 	type Error = io::Error;
 	type Key = [u8];
@@ -534,11 +559,18 @@ pub struct Backend<Block: BlockT> {
 	shared_cache: SharedCache<Block, Blake2Hasher>,
 }
 
+/*
+Backend 实例的实现
+*/
 impl<Block: BlockT<Hash=H256>> Backend<Block> {
 	/// Create a new instance of database backend.
 	///
 	/// The pruning window is how old a block must be before the state is pruned.
 	pub fn new(config: DatabaseSettings, canonicalization_delay: u64) -> Result<Self, client::error::Error> {
+
+		/*
+		TODO 这里打开 db实例 （RocksDB）
+		*/
 		let db = open_database(&config, columns::META, "full")?;
 
 		Backend::from_kvdb(db as Arc<_>, config.pruning, canonicalization_delay, config.state_cache_size)
@@ -563,7 +595,9 @@ impl<Block: BlockT<Hash=H256>> Backend<Block> {
 		let blockchain = BlockchainDb::new(db.clone())?;
 		let meta = blockchain.meta.clone();
 		let map_e = |e: state_db::Error<io::Error>| ::client::error::Error::from(format!("State database error: {:?}", e));
+		// 创建一个 stateDB 实例
 		let state_db: StateDb<_, _> = StateDb::new(pruning, &StateMetaDb(&*db)).map_err(map_e)?;
+		// 封装出一个 storageDB 实例
 		let storage_db = StorageDb {
 			db: db.clone(),
 			state_db,
@@ -1077,6 +1111,7 @@ impl<Block> client::backend::Backend<Block, Blake2Hasher> for Backend<Block> whe
 				Ok(())
 			},
 			e @ Err(_) => {
+				/*回滚 */
 				self.storage.state_db.revert_pending();
 				e
 			}

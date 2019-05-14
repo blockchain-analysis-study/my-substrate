@@ -30,6 +30,7 @@ use node_executor;
 use primitives::{Pair as PairT, ed25519};
 use node_primitives::Block;
 use node_runtime::{GenesisConfig, RuntimeApi};
+// 注意： 就这个 LightComponents, FullComponents 就是 core/service/components.rs 中定义的那两个
 use substrate_service::{
 	FactoryFullConfiguration, LightComponents, FullComponents, FullBackend,
 	FullClient, LightClient, LightBackend, FullExecutor, LightExecutor, TaskExecutor,
@@ -63,6 +64,15 @@ impl<F> Default for NodeConfig<F> where F: substrate_service::ServiceFactory {
 	}
 }
 
+/*
+TODO 重要的入口
+
+这个和Polkadot中类似
+
+调用 宏
+创建 对应的 服务实例
+fullNode 或者 lightNode
+*/
 construct_service_factory! {
 	struct Factory {
 		Block = Block,
@@ -75,6 +85,12 @@ construct_service_factory! {
 			{ |config, client| Ok(TransactionPool::new(config, transaction_pool::ChainApi::new(client))) },
 		Genesis = GenesisConfig,
 		Configuration = NodeConfig<Self>,
+
+		/*
+		全节点的定义
+
+		fullNode
+		*/
 		FullService = FullComponents<Self>
 			{ |config: FactoryFullConfiguration<Self>, executor: TaskExecutor|
 				FullComponents::<Factory>::new(config, executor) },
@@ -152,6 +168,12 @@ construct_service_factory! {
 				Ok(service)
 			}
 		},
+
+		/*
+		轻节点的定义
+
+		lightNode
+		*/
 		LightService = LightComponents<Self>
 			{ |config, executor| <LightComponents<Factory>>::new(config, executor) },
 		FullImportQueue = AuraImportQueue<Self::Block>

@@ -73,6 +73,9 @@ fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
 }
 
 /// Parse command line arguments into service configuration.
+/*
+解析命令行参数到  服务配置中
+*/
 pub fn run<I, T, E>(args: I, exit: E, version: cli::VersionInfo) -> error::Result<()> where
 	I: IntoIterator<Item = T>,
 	T: Into<std::ffi::OsString> + Clone,
@@ -91,13 +94,27 @@ pub fn run<I, T, E>(args: I, exit: E, version: cli::VersionInfo) -> error::Resul
 				.map_err(|e| format!("{:?}", e))?;
 			let executor = runtime.executor();
 			match config.roles {
+
+				/*
+				如果是 轻节点
+				*/
 				ServiceRoles::LIGHT => run_until_exit(
 					runtime,
+							/*
+							TODO 注意： service::Factory才是真正的创建一个 服务实例
+							*/
 					service::Factory::new_light(config, executor).map_err(|e| format!("{:?}", e))?,
 					exit
 				),
+
+				/*
+				如果是 全节点
+				*/
 				_ => run_until_exit(
 					runtime,
+							/*
+							TODO 注意： service::Factory才是真正的创建一个 服务实例
+							*/
 					service::Factory::new_full(config, executor).map_err(|e| format!("{:?}", e))?,
 					exit
 				),
@@ -119,6 +136,10 @@ fn run_until_exit<T, C, E>(
 	let (exit_send, exit) = exit_future::signal();
 
 	let executor = runtime.executor();
+
+	/*
+	真正 start node
+	*/
 	cli::informant::start(&service, exit.clone(), executor.clone());
 
 	let _ = runtime.block_on(e.into_exit());
