@@ -72,21 +72,86 @@
 ///
 /// The population of the genesis storage depends on the order of modules. So, if one of your
 /// modules depends on another module. The dependent module need to come before the module depending on it.
+/*
+宏： TODO 这里顺便讲一讲 宏的定义
+
+TODO 定义初始化 runtime 的宏
+
+TODO  这个 宏就TM的看不懂啊
+*/
 #[macro_export]
 macro_rules! construct_runtime {
 
 	// Macro transformations (to convert invocations with incomplete parameters to the canonical
 	// form)
+    /*
+    宏转换（将具有不完整参数的调用转换为规范形式）
 
-	(
+    宏中的匹配规则
+
+    宏中使用字面量匹配的哦
+
+    几种指示符：
+
+    ident: 标识符，用来表示函数或变量名
+    expr: 表达式
+    block: 代码块，用花括号包起来的多个语句
+    pat: 模式，普通模式匹配（非宏本身的模式）中的模式，例如 Some(t), (3, 'a', _)
+    path: 路径，注意这里不是操作系统中的文件路径，而是用双冒号分隔的限定名(qualified name)，如 std::cmp::PartialOrd
+    tt: 单个语法树
+    ty: 类型，语义层面的类型，如 i32, char
+    item: 条目，
+    meta: 元条目
+    stmt: 单条语句，如 let a = 42;
+
+
+    #[macro_use] 表示子模块的宏可以被父模块调用
+    #[macro_export] 表示可以被其他的 crate 调用
+    $crate 在宏中表示该模块
+
+
+    */
+
+    /*
+    TODO【第一个匹配分支】
+    */
+
+	(   // 这里定义一个 enum 的变量名： runtime ，ident代表runtime变量为一个函数或者变量名
+	    // 变量： log_internal 为一个函数或者一个变量名
+	    // 以及一个名叫做DigestItem<类型1, 类型2, 类型3, ...(这里可能是多个不定数目的类型)>
+	    // + 表示一次或多次（至少一次），而 * 表示零次或多次
+	    // 重复的模式需要用括号括起来，外面再加上 $，例如 $(...)*, $(...)+
+	    //
+	    // 注意： 需要说明的是这里的括号和宏里面其它地方一样都可以是三种括号中的任意一种，
+	    // 因为括号在这里仅仅是用来标记一个模式的开始和结束，大部分情况重复的模式是用逗号或分号分隔的，
+	    // 所以你会经常看到 $(...),*, $(...);*, $(...),+, $(...);+ 这样的用来表示重复。
 		pub enum $runtime:ident with Log ($log_internal:ident: DigestItem<$( $log_genarg:ty ),+>)
 			where
+
+			    // 这里是一个函数或者变量名
 				Block = $block:ident,
+				// 这里是一个类型标识
 				NodeBlock = $node_block:ty,
+				// 这里是一个函数或者变量名
 				UncheckedExtrinsic = $uncheckedextrinsic:ident
 		{
+		    // 表示这里是多个 语法树, 其实就是语法流程
 			$( $rest:tt )*
 		}
+
+		// 下面 => {}; 中的 是该宏的真正 逻辑块
+		//  下面这些是真看不懂啊
+		//
+		// $crate::construct_runtime! 这个是
+		//
+		// 定义一个可以在[库内外]都能用的宏。这个函数名字会展开为::construct_runtime 或::mylib::construct_runtime。
+		// 为了保证这个系统简单和正确，#[macro_use] extern crate ...应只出现在你包装箱的根中，而不是在mod中
+	    // TODO 注意，宏定义中不能多 空格，学一学 yaml 的定义就知道了
+        //
+	    // TODO 这个表示  库内外 都可任意使用的 宏
+        // 这个函数名字会展开为::increment或::mylib::increment。
+        // 为了保证这个系统简单和正确，#[macro_use] extern crate ...【应只出现在你包装箱的根中】，而不是在mod中
+	    //
 	) => {
 		$crate::construct_runtime!(
 			{
@@ -100,6 +165,11 @@ macro_rules! construct_runtime {
 			$( $rest )*
 		);
 	};
+
+
+    /*
+    TODO【第二个匹配分支】
+    */
 	(
 		{ $( $preset:tt )* };
 		{ $( $expanded:tt )* };
@@ -112,6 +182,11 @@ macro_rules! construct_runtime {
 			$( $rest )*
 		);
 	};
+
+
+	/*
+    TODO【第三个匹配分支】
+    */
 	(
 		{ $( $preset:tt )* };
 		{ $( $expanded:tt )* };
@@ -140,6 +215,11 @@ macro_rules! construct_runtime {
 			$( $rest )*
 		);
 	};
+
+
+	/*
+    TODO【第四个匹配分支】
+    */
 	(
 		{ $( $preset:tt )* };
 		{ $( $expanded:tt )* };
@@ -166,6 +246,10 @@ macro_rules! construct_runtime {
 			$( $rest )*
 		);
 	};
+
+	/*
+    TODO【第五个匹配分支】
+    */
 	( // Instance module: we indicate the generic instance `I` with the full instance path
 		{ $( $preset:tt )* };
 		{ $( $expanded:tt )* };
@@ -195,6 +279,10 @@ macro_rules! construct_runtime {
 
 	// The main macro expansion that actually renders the Runtime code.
 
+
+    /*
+    TODO【第六个匹配分支】
+    */
 	(
 		{
 			$runtime:ident;

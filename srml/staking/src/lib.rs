@@ -549,6 +549,16 @@ decl_storage! {
 	}
 }
 
+
+/*
+TODO #######################################
+TODO #######################################
+TODO									   #
+TODO 这一块就是 质押  解质押   提名 相关的东西了  #
+TODO									   #
+TODO #######################################
+TODO #######################################
+*/
 decl_module! {
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
 		fn deposit_event<T>() = default;
@@ -799,6 +809,10 @@ impl<T: Trait> Module<T> {
 
 	/// Slash a given validator by a specific amount. Removes the slash from the validator's balance by preference,
 	/// and reduces the nominators' balance if needed.
+	/*
+	将给定的验证器削减特定数量。
+	优先从验证者的余额中删除斜杠，并在需要时减少提名者的余额。
+	*/
 	fn slash_validator(stash: &T::AccountId, slash: BalanceOf<T>) {
 		// The exposure (backing stake) information of the validator to be slashed.
 		let exposure = Self::stakers(stash);
@@ -849,6 +863,10 @@ impl<T: Trait> Module<T> {
 
 	/// Reward a given validator by a specific amount. Add the reward to the validator's, and its nominators'
 	/// balance, pro-rata based on their exposure, after having removed the validator's pre-payout cut.
+	/*
+	奖励给定的验证者特定数量。
+	在取消了验证者的预付款削减后，根据他们的风险承担，按比例将奖励添加到验证者及其提名者的余额中。
+	*/
 	fn reward_validator(stash: &T::AccountId, reward: BalanceOf<T>) {
 		let off_the_table = reward.min(Self::validators(stash).validator_payment);
 		let reward = reward - off_the_table;
@@ -900,12 +918,20 @@ impl<T: Trait> Module<T> {
 	///
 	/// NOTE: This always happens immediately before a session change to ensure that new validators
 	/// get a chance to set their session keys.
+	/*
+	新的一个时代(轮次)-制定新的质押集
+
+
+	NOTE：这总是在更改会话之前立即发生，以确保新的验证人们有机会设置其会话密钥。
+	*/
 	fn new_era() {
 		// Payout
 		let reward = <CurrentEraReward<T>>::take();
 		if !reward.is_zero() {
 			let validators = Self::current_elected();
 			for v in validators.iter() {
+
+				// 给验证人发放奖励
 				Self::reward_validator(v, reward);
 			}
 			Self::deposit_event(RawEvent::Reward(reward));
@@ -941,6 +967,10 @@ impl<T: Trait> Module<T> {
 	/// Select a new validator set from the assembled stakers and their role preferences.
 	///
 	/// Returns the new `SlotStake` value.
+	/*
+	TODO 选举新一轮的验证人
+	TODO 【超级重要】
+	*/
 	fn select_validators() -> BalanceOf<T> {
 		let maybe_elected_set = elect::<T, _, _, _>(
 			Self::validator_count() as usize,

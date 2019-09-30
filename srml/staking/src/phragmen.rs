@@ -35,44 +35,66 @@ const SCALE_FACTOR: ExtendedBalance = u32::max_value() as ExtendedBalance + 1;
 pub const ACCURACY: ExtendedBalance = u32::max_value() as ExtendedBalance + 1;
 
 /// Wrapper around validation candidates some metadata.
+/*
+围绕验证候选人包装一些元数据。
+TODO 候选人的定义
+*/
 #[derive(Clone, Encode, Decode, Default)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct Candidate<AccountId> {
 	/// The validator's account
+	//  候选人的账户
 	pub who: AccountId,
 	/// Intermediary value used to sort candidates.
+	// 用于对候选者进行排序的 媒介值 (权重，得分)
 	pub score: Fraction,
 	/// Accumulator of the stake of this candidate based on received votes.
+	// 根据收到的票数累计该候选人的股份。
 	approval_stake: ExtendedBalance,
 	/// Flag for being elected.
+	// 被选举的标志。（是否当选??）
 	elected: bool,
 }
 
 /// Wrapper around the nomination info of a single nominator for a group of validators.
+/*
+包装一组验证人的单个提名人的提名信息
+*/
 #[derive(Clone, Encode, Decode, Default)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct Nominator<AccountId> {
 	/// The nominator's account.
+	// 提名账号 (发起提名人?被提名人?)
 	who: AccountId,
 	/// List of validators proposed by this nominator.
+	// 该提名人提出的验证人名单
 	edges: Vec<Edge<AccountId>>,
 	/// the stake amount proposed by the nominator as a part of the vote.
+	// 提名人提议的股份数量作为表决的一部分
 	budget: ExtendedBalance,
 	/// Incremented each time a nominee that this nominator voted for has been elected.
+	// 每次提名该提名人投票的提名人时增加
 	load: Fraction,
 }
 
 /// Wrapper around a nominator vote and the load of that vote.
+/*
+围绕提名人投票的投票以及该投票的负担
+*/
 #[derive(Clone, Encode, Decode, Default)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct Edge<AccountId> {
 	/// Account being voted for
+	// 被投票的账户
 	who: AccountId,
 	/// Load of this vote.
+	// 被投的票
 	load: Fraction,
 	/// Equal to `edge.load / nom.load`. Stored only to be used with post-processing.
+	// 仅存储用于后处理
 	ratio: ExtendedBalance,
 	/// Index of the candidate stored in the 'candidates' vector.
+	// 存储该被投票的候选人在“候选人” 集合中的候选索引
 	candidate_index: usize,
 }
 

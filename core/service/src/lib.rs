@@ -571,6 +571,14 @@ impl<C: Components> network::TransactionPool<ComponentExHash<C>, ComponentBlock<
 /// 	}
 /// }
 /// ```
+/*
+TODO 重要的宏
+
+TODO 创建 Node 的宏
+
+TODO 被 Polkadot 中的入口处，启动节点用
+
+*/
 #[macro_export]
 macro_rules! construct_service_factory {
 	(
@@ -657,7 +665,7 @@ macro_rules! construct_service_factory {
 			) -> Result<Self::LightImportQueue, $crate::Error> {
 				( $( $light_import_queue_init )* ) (config, client)
 			}
-
+//			定义了创建 light node 的 fn (Polkadot中用到)
 			fn new_light(
 				config: $crate::FactoryFullConfiguration<Self>,
 				executor: $crate::TaskExecutor
@@ -665,7 +673,7 @@ macro_rules! construct_service_factory {
 			{
 				( $( $light_service_init )* ) (config, executor)
 			}
-
+//			定义了创建 full node 的 fn (Polkadot中用到)
 			fn new_full(
 				config: $crate::FactoryFullConfiguration<Self>,
 				executor: $crate::TaskExecutor,

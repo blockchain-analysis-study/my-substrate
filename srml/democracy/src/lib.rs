@@ -16,6 +16,11 @@
 
 //! Democratic system: Handles administration of general stakeholder voting.
 
+/*
+democracy: 民主
+民主制度：处理一般利益相关者的投票管理
+*/
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use rstd::prelude::*;
@@ -84,7 +89,10 @@ decl_module! {
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
 		fn deposit_event<T>() = default;
 
-		/// Propose a sensitive action to be taken.
+		/// Propose a sensitive action to be taken. (sensitive: 敏感的)
+		/*
+		提出要采取的敏感措施
+		*/
 		fn propose(
 			origin,
 			proposal: Box<T::Proposal>,
@@ -108,6 +116,9 @@ decl_module! {
 		}
 
 		/// Propose a sensitive action to be taken.
+		/*
+		提出要采取的敏感措施
+		*/
 		fn second(origin, #[compact] proposal: PropIndex) {
 			let who = ensure_signed(origin)?;
 			let mut deposit = Self::deposit_of(proposal)
@@ -137,6 +148,9 @@ decl_module! {
 		}
 
 		/// Start a referendum.
+		/*
+		开始公投
+		*/
 		fn start_referendum(proposal: Box<T::Proposal>, threshold: VoteThreshold, delay: T::BlockNumber) -> Result {
 			Self::inject_referendum(
 				<system::Module<T>>::block_number() + Self::voting_period(),
@@ -147,11 +161,17 @@ decl_module! {
 		}
 
 		/// Remove a referendum.
+		/*
+		撤销公投
+		*/
 		fn cancel_referendum(#[compact] ref_index: ReferendumIndex) {
 			Self::clear_referendum(ref_index);
 		}
 
 		/// Cancel a proposal queued for enactment.
+		/*
+		取消排队等待实施的提案
+		*/
 		pub fn cancel_queued(#[compact] when: T::BlockNumber, #[compact] which: u32) {
 			let which = which as usize;
 			<DispatchQueue<T>>::mutate(when, |items| if items.len() > which { items[which] = None });
